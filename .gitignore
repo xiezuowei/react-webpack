@@ -1,0 +1,12 @@
+# dependencies
+/node_modules
+
+# IDE
+/.vscode
+/.idea
+/.history
+
+/stats.json
+node_modules
+
+/package-lock.json
