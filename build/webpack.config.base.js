@@ -1,4 +1,3 @@
-const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -7,12 +6,34 @@ const PATHS = require('./paths');
 
 const isDEV = process.env.NODE_ENV === 'development' // 是否是开发模式
 
-// 处理css的loader配置
-const handleCssLoaders = [
-    isDEV ? 'style-loader' : MiniCssExtractPlugin.loader,
-    'css-loader',
-    'postcss-loader'
-]
+// css文件匹配
+const cssRegex = /\.css$/;
+const cssModuleRegex = /\.module\.css$/;
+const lessRegex = /\.less$/;
+const lessModuleRegex = /\.module\.less$/;
+
+/**
+ * 处理css的loader配置
+ * @param cssLoaderOptions cssLoader的options配置
+ * @param preProcessor 需要添加的预处理程序
+ * @returns {[(string|*), {loader: string, options: *}, string]}
+ */
+function getStyleLoaders(cssLoaderOptions, preProcessor) {
+    const loaders = [
+        isDEV ? 'style-loader' : MiniCssExtractPlugin.loader,
+        {
+            loader: 'css-loader',
+            options: cssLoaderOptions
+        },
+        'postcss-loader'
+    ];
+
+    if (preProcessor) {
+        loaders.push(preProcessor);
+    }
+
+    return loaders;
+}
 
 const env = getClientEnvironment();
 
@@ -35,23 +56,56 @@ module.exports = {
             {
                 // 如果node_moduels中也有要处理的语法，可以把js|jsx文件配置加上
                 test: /.(ts|tsx)$/,
-                use: ['thread-loader', 'babel-loader'],
+                use: [
+                    {
+                        loader: 'thread-loader',
+                        options: {
+                            workers: 2
+                        }
+                    },
+                    'babel-loader'
+                ],
                 include: [PATHS.rootPath]
             },
 
             // 处理css
             {
-                test: /.css$/,
-                use: handleCssLoaders,
+                test: cssRegex,
+                exclude: cssModuleRegex,
+                use: getStyleLoaders({
+                    importLoaders: 1
+                }),
+            },
+
+            // .module.css
+            {
+                test: cssModuleRegex,
+                use: getStyleLoaders({
+                    importLoaders: 1,
+                    modules: {
+                        localIdentName: '[local]---[hash:base64:5]'
+                    }
+                }),
             },
 
             // 处理less
             {
-                test: /.less$/,
-                use: [
-                    ...handleCssLoaders,
-                    'less-loader'
-                ],
+                test: lessRegex,
+                exclude: lessModuleRegex,
+                use: getStyleLoaders({
+                    importLoaders: 1
+                }, 'less-loader'),
+            },
+
+            // 处理.module.less
+            {
+                test: lessModuleRegex,
+                use: getStyleLoaders({
+                    importLoaders: 1,
+                    modules: {
+                        localIdentName: '[local]---[hash:base64:5]'
+                    }
+                }, 'less-loader'),
             },
 
             // 处理图片文件
@@ -100,13 +154,22 @@ module.exports = {
             {
                 test: /.(xlsx|csv|xls)$/, // 匹配excel文件
                 type: 'asset', // type选择asset
+                generator: {
+                    filename: 'static/excel/[name].[contenthash:8][ext]', // 文件输出目录和命名
+                },
+            },
+
+            // 处理epub文件
+            {
+                test: /.(epub)$/, // 匹配epub文件
+                type: 'asset', // type选择asset
                 parser: {
                     dataUrlCondition: {
                         maxSize: 10 * 1024, // 小于10kb转base64位
                     },
                 },
                 generator: {
-                    filename: 'static/excel/[name].[contenthash:8][ext]', // 文件输出目录和命名
+                    filename: 'static/book/[name].[contenthash:8][ext]', // 文件输出目录和命名
                 },
             }
         ],
