@@ -1,16 +1,27 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import { Provider as ReduxProvider } from 'react-redux';
+
 import App from '@/App';
+import store from './modules/store';
 
-const root = document.getElementById('root');
+const rootNode = document.getElementById('root');
 
-function render() {
-    if (root) {
-        ReactDOM.render(<App/>, root);
+function renderApp() {
+    if (rootNode) {
+        const root = createRoot(rootNode);
+        root.render(
+            <ReduxProvider store={store}>
+                <BrowserRouter>
+                    <App/>
+                </BrowserRouter>
+            </ReduxProvider>
+        );
     }
 }
 
-render();
+renderApp();
 
 console.log('NODE_ENV', process.env.NODE_ENV)
 console.log('BASE_ENV', process.env.BASE_ENV)

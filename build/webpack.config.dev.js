@@ -1,6 +1,5 @@
 // webpack.config.dev.js
 
-const path = require('path');
 const { merge } = require('webpack-merge');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 const baseConfig = require('./webpack.config.base.js');
@@ -13,7 +12,7 @@ module.exports = merge(baseConfig, {
     devtool: 'eval-cheap-module-source-map',
     devServer: {
         // 服务端口号
-        port: 3000,
+        port: 60080,
         // gzip压缩，开发环境不开启，可提升热更新速度
         compress: false,
         // 开启热更新
